@@ -1,6 +1,8 @@
 from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
 
 from apps.theatre.models import (
     Genre,
@@ -25,24 +27,36 @@ from apps.theatre.serializers import (
 )
 
 
+class IsAdminOrIfAuthenticatedReadOnly(IsAdminUser):
+    def has_permission(self, request, view):
+        is_admin = super().has_permission(request, view)
+        return request.method in ("GET", "HEAD", "OPTIONS") or is_admin
+
+
 class GenreViewSet(viewsets.ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class TheatreHallViewSet(viewsets.ModelViewSet):
     queryset = TheatreHall.objects.all()
     serializer_class = TheatreHallSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class PlayViewSet(viewsets.ModelViewSet):
     queryset = Play.objects.all()
     serializer_class = PlaySerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ("genres", "actors")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -55,6 +69,9 @@ class PlayViewSet(viewsets.ModelViewSet):
 class PerformanceViewSet(viewsets.ModelViewSet):
     queryset = Performance.objects.all()
     serializer_class = PerformanceSerializer
+    permission_classes = (AllowAny,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ("play", "show_time")
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -67,6 +84,7 @@ class PerformanceViewSet(viewsets.ModelViewSet):
 class ReservationViewSet(viewsets.ModelViewSet):
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         """Users can see only their own reservations"""
@@ -94,7 +112,8 @@ class ReservationViewSet(viewsets.ModelViewSet):
             performance = Performance.objects.get(id=performance_id)
         except Performance.DoesNotExist:
             return Response(
-                {"error": "Performance not found."}, status=status.HTTP_404_NOT_FOUND
+                {"error": "Performance not found."},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         try:
@@ -128,10 +147,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
                 Ticket.objects.bulk_create(tickets_to_create)
 
                 serializer = self.get_serializer(reservation)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
 
         except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
         except Exception:
             return Response(
                 {"error": "An unexpected error occurred during reservation."},
