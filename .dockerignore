@@ -1,0 +1,19 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Docker
+.dockerignore
+Dockerfile
+
+# VS Code
+.vscode/
+
+# DB
+db.sqlite3

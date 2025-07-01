@@ -135,6 +135,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.envs/.local/.django
+.envs/.local/.postgres
 
 # Spyder project settings
 .spyderproject
