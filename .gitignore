@@ -135,6 +135,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.envs/.local/.django
+.envs/.local/.postgres
 
 # Spyder project settings
 .spyderproject
@@ -192,3 +194,5 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+pyproject.toml

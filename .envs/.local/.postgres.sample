@@ -1,0 +1,3 @@
+POSTGRES_DB=theatre_db
+POSTGRES_USER=theatre_user
+POSTGRES_PASSWORD=theatre_pass
